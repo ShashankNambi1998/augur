@@ -1,9 +1,18 @@
 Collecting data
 ===============
 
-Now that you've installed Augur's application server, it's time to configure your data collection workers.
+Now that you've installed Augur's application server, it's time to configure your data collection workers. If you just want to run Augur using the single repository in the default database, and default worker settings all you need to do is this: 
 
-There are 2 pieces to data collection with Augur: the housekeeper, and the data collection workers. The housekeeper creates long-running "jobs" that specify what kind of data to collect for what set of repositories. The data collection workers can then accept these jobs, after which it will use the information provided in the job to find the repositories in question and collect the requested data.
+.. code-block:: bash
+
+   # To Start Augur: 
+   $ nohup augur backend start >logs/run.log 2>logs/run.err &
+
+   # To Stop Augur: 
+   $ augur backend stop
+   $ augur backend kill
+
+Now, here's a ton of brain splitting detail about workers, and their configuration. There are 2 pieces to data collection with Augur: the housekeeper, and the data collection workers. The housekeeper creates long-running "jobs" that specify what kind of data to collect for what set of repositories. The data collection workers can then accept these jobs, after which it will use the information provided in the job to find the repositories in question and collect the requested data.
 
 Since the default housekeeper setup will work for most use cases, we'll first cover how to configure the workers and then briefly touch on the housekeeper configuration options, after which we'll cover how to add repos and repo groups to the database.
 
@@ -21,9 +30,7 @@ There are a few workers that ship ready to collect out of the box:
 - ``linux_badge_worker`` (collects `CII badging <https://bestpractices.coreinfrastructure.org/en>`_ data from the CII API)
 - ``insight_worker`` (queries Augur's metrics API to find interesting anomalies in the collected data)
 
-All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which you generated at the end of the previous section) with each worker having its own subsection with same title as the the worker's name.
-
-A full configuration file reference can be found on the next page, but we recommend leaving the defaults and only changing them when necessary; read on for more on how to make sure your workers are properly configured.
+All worker configuration options are found in the ``Workers`` block of the ``augur.config.json`` file (which was generated for you at the end of the previous section). This file is located at ``$HOME/.augur/augur.config.json``. Each worker has its own subsection with same title as the the worker's name. We recommend leaving the defaults and only changing them when explicitly necessary, as the default parameters will work for most use cases. Read on for more on how to make sure your workers are properly configured.
 
 Standard configuration options
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -51,7 +58,7 @@ Next up are the configuration options specific to each worker (but some workers 
 ``insight_worker``
 ::::::::::::::::::
 
-We recommend leaving the defaults in place for the insight worker unless you interested in other metrics, or anomalies for a different time period. 
+We recommend leaving the defaults in place for the insight worker unless you are interested in other metrics, or anomalies for a different time period.
 
 - ``training_days``, which specifies the date range that the ``insight_worker`` should use as its baseline for the statistical comparison. Defaults to ``365``, meaning that the worker will identify metrics that have had anomalies compared to their values over the course of the past year, starting at the current date.
 
@@ -66,15 +73,15 @@ We recommend leaving the defaults in place for the insight worker unless you int
         'endpoint_name_1': 'field_2_of_endpoint',
         'endpoint_name_2': 'field_1_of_endpoint',
         ...
-    } 
+    }
 
     # defaults to the following
 
     {
-        "issues-new": "issues", 
-        "code-changes": "commit_count", 
-        "code-changes-lines": "added", 
-        "reviews": "pull_requests", 
+        "issues-new": "issues",
+        "code-changes": "commit_count",
+        "code-changes-lines": "added",
+        "reviews": "pull_requests",
         "contributors-new": "new_contributors"
     }
 
@@ -114,14 +121,14 @@ If you're using the Docker container, you can use the `provided UI <../docker/us
 Running collections
 --------------------
 
-Congratuations! At this point you (hopefully) have a fully functioning and configured Augur instance. 
+Congratuations! At this point you (hopefully) have a fully functioning and configured Augur instance.
 
 After you've loaded your repos, you're ready for your first collection run. We recommend running only the default workers first to gather the initial data. If you're collecting data for a lot of repositories, or repositories with a lot of data, we recommend increasing the number of ``github_workers`` and ``pull_request_workers``.
 
-You can now run Augur and start the data collection by issuing the ``augur run`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `here <../development-guide/logging.html>`_.
+You can now run Augur and start the data collection by issuing the ``augur backend start`` command in the root ``augur`` directory. All your logs (including worker logs and error files) will be saved to a ``logs/`` subdirectory in that same folder, but this can be customized - more on that and other logging utilities `in the development guide <../development-guide/logging.html>`_.
 
-Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
+Once you've finished the initial data collection, we suggest then running the ``value_worker`` (if you have it installed) and the ``insight_worker``. This is because the ``value_worker`` depends on the source files of the repositories cloned by the ``facade_worker``, and the ``insight_worker`` uses the data from all the other workers to identify anomalies in the data by by performing statistical analysis on the data returned from Augur's metrics API.
 
-You're now ready to start exploring the data Augur can gather and metrics we can generate. If you're interested in contributing to Augur's codebase, you can check out the `development guide <../development-guide/toc.html>`_.
+You're now ready to start exploring the data Augur can gather and metrics we can generate. If you're interested in contributing to Augur's codebase, you can check out the `development guide <../development-guide/toc.html>`_. For information about Augur's frontend, keep reading!
 
 Happy collecting!
